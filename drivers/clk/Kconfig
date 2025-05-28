@@ -550,6 +550,13 @@ config CLK_KUNIT_TEST
 	help
 	  Kunit tests for the common clock framework.
 
+config CLK_DIVIDER_KUNIT_TEST
+	tristate "Basic divider clk type KUnit test" if !KUNIT_ALL_TESTS
+	depends on KUNIT && CLK_KUNIT_TEST
+	default KUNIT_ALL_TESTS
+	help
+	  KUnit tests for the basic divider clk type.
+
 config CLK_FIXED_RATE_KUNIT_TEST
 	tristate "Basic fixed rate clk type KUnit test" if !KUNIT_ALL_TESTS
 	depends on KUNIT

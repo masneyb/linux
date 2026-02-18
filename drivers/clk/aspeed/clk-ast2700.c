@@ -901,6 +901,8 @@ static int ast2700_soc_clk_probe(struct platform_device *pdev)
 
 	clk_ctrl->clk_data = clk_data;
 	reset_name = devm_kasprintf(dev, GFP_KERNEL, "reset%d", clk_data->scu);
+	if (!reset_name)
+		return -ENOMEM;
 
 	clk_hw_data = devm_kzalloc(dev, struct_size(clk_hw_data, hws, clk_data->nr_clks),
 				   GFP_KERNEL);

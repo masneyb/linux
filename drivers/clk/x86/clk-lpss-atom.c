@@ -10,23 +10,36 @@
 #include <linux/clk-provider.h>
 #include <linux/err.h>
 #include <linux/module.h>
-#include <linux/platform_data/x86/clk-lpss.h>
 #include <linux/platform_device.h>
+#include <linux/property.h>
 #include <linux/units.h>
+
+#include <linux/platform_data/x86/clk-lpss.h>
 
 static int lpss_atom_clk_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct lpss_clk_data *drvdata;
 	struct clk *clk;
+	u32 rate;
+	int ret;
 
 	drvdata = devm_kzalloc(dev, sizeof(*drvdata), GFP_KERNEL);
 	if (!drvdata)
 		return -ENOMEM;
 
+	if (device_property_present(dev, "clock-frequency")) {
+		ret = device_property_read_u32(dev, "clock-frequency", &rate);
+		if (ret)
+			return ret;
+	} else {
+		/* Default frequency is 100MHz */
+		rate = 100 * HZ_PER_MHZ;
+	}
+
 	/* LPSS free running clock */
 	drvdata->name = "lpss_clk";
-	clk = clk_register_fixed_rate(dev, drvdata->name, NULL, 0, 100 * HZ_PER_MHZ);
+	clk = clk_register_fixed_rate(dev, drvdata->name, NULL, 0, rate);
 	if (IS_ERR(clk))
 		return PTR_ERR(clk);
 

@@ -16,17 +16,17 @@
 
 static int lpss_atom_clk_probe(struct platform_device *pdev)
 {
+	struct device *dev = &pdev->dev;
 	struct lpss_clk_data *drvdata;
 	struct clk *clk;
 
-	drvdata = devm_kzalloc(&pdev->dev, sizeof(*drvdata), GFP_KERNEL);
+	drvdata = devm_kzalloc(dev, sizeof(*drvdata), GFP_KERNEL);
 	if (!drvdata)
 		return -ENOMEM;
 
 	/* LPSS free running clock */
 	drvdata->name = "lpss_clk";
-	clk = clk_register_fixed_rate(&pdev->dev, drvdata->name, NULL,
-				      0, 100 * HZ_PER_MHZ);
+	clk = clk_register_fixed_rate(dev, drvdata->name, NULL, 0, 100 * HZ_PER_MHZ);
 	if (IS_ERR(clk))
 		return PTR_ERR(clk);
 

@@ -10,6 +10,7 @@
 #include <linux/clkdev.h>
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
+#include <linux/compiler_attributes.h>
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/hashtable.h>
@@ -24,6 +25,8 @@
 #include <linux/spinlock.h>
 #include <linux/string.h>
 #include <linux/stringhash.h>
+
+#include <kunit/visibility.h>
 
 #include "clk.h"
 
@@ -777,6 +780,21 @@ struct clk *__clk_lookup(const char *name)
 
 	return !core ? NULL : core->hw->clk;
 }
+
+/* This is only provided for kunit tests to test the core lookup functions. */
+#if IS_ENABLED(CONFIG_CLK_KUNIT_TEST)
+VISIBLE_IF_KUNIT struct clk_hw * __maybe_unused __must_check clk_hw_lookup(const char *name)
+{
+	struct clk_core *core;
+
+	clk_prepare_lock();
+	core = clk_core_lookup(name);
+	clk_prepare_unlock();
+
+	return !core ? NULL : core->hw;
+}
+EXPORT_SYMBOL_IF_KUNIT(clk_hw_lookup);
+#endif
 
 static void clk_core_get_boundaries(struct clk_core *core,
 				    unsigned long *min_rate,

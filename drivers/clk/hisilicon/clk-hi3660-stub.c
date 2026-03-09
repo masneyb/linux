@@ -32,7 +32,8 @@
 			.name = #_name,				\
 			.ops = &hi3660_stub_clk_ops,		\
 			.num_parents = 0,			\
-			.flags = CLK_GET_RATE_NOCACHE,		\
+			.flags = CLK_GET_RATE_NOCACHE |		\
+				 CLK_ROUNDING_NOOP,		\
 		},						\
 	}
 
@@ -67,16 +68,6 @@ static unsigned long hi3660_stub_clk_recalc_rate(struct clk_hw *hw,
 	return stub_clk->rate;
 }
 
-static int hi3660_stub_clk_determine_rate(struct clk_hw *hw,
-					  struct clk_rate_request *req)
-{
-	/*
-	 * LPM3 handles rate rounding so just return whatever
-	 * rate is requested.
-	 */
-	return 0;
-}
-
 static int hi3660_stub_clk_set_rate(struct clk_hw *hw, unsigned long rate,
 				    unsigned long parent_rate)
 {
@@ -97,7 +88,6 @@ static int hi3660_stub_clk_set_rate(struct clk_hw *hw, unsigned long rate,
 
 static const struct clk_ops hi3660_stub_clk_ops = {
 	.recalc_rate    = hi3660_stub_clk_recalc_rate,
-	.determine_rate = hi3660_stub_clk_determine_rate,
 	.set_rate       = hi3660_stub_clk_set_rate,
 };
 

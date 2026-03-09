@@ -3606,8 +3606,94 @@ static struct kunit_suite clk_lookup_test_suite = {
 	.test_cases = clk_lookup_test_cases,
 };
 
+static const struct clk_ops clk_no_determine_rate_ops = {
+	.recalc_rate = clk_dummy_recalc_rate,
+	.set_rate = clk_dummy_set_rate,
+};
+
+/*
+ * Test that clk_hw_register() fails when determine_rate is not set.
+ */
+static void clk_test_no_determine_rate_fails(struct kunit *test)
+{
+	struct clk_init_data init = { };
+	struct clk_dummy_context *ctx;
+	int ret;
+
+	ctx = kunit_kzalloc(test, sizeof(*ctx), GFP_KERNEL);
+	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
+
+	ctx->rate = DUMMY_CLOCK_INIT_RATE;
+
+	init.name = "test_no_determine_rate";
+	init.ops = &clk_no_determine_rate_ops;
+	ctx->hw.init = &init;
+
+	ret = clk_hw_register(NULL, &ctx->hw);
+	KUNIT_EXPECT_EQ(test, ret, -EINVAL);
+}
+
+/*
+ * Test that clk_hw_register() succeeds when determine_rate is not set,
+ * and CLK_ROUNDING_NOOP is set. clk_set_rate() works, and
+ * clk_round_rate() returns the requested rate.
+ */
+static void clk_test_noop_round_rate(struct kunit *test)
+{
+	struct clk_init_data init = { };
+	struct clk_dummy_context *ctx;
+	long rate, rounded_rate;
+	struct clk *clk;
+	int ret;
+
+	ctx = kunit_kzalloc(test, sizeof(*ctx), GFP_KERNEL);
+	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, ctx);
+
+	ctx->rate = DUMMY_CLOCK_INIT_RATE;
+
+	init.name = "test_noop";
+	init.ops = &clk_no_determine_rate_ops;
+	init.flags = CLK_ROUNDING_NOOP;
+	ctx->hw.init = &init;
+
+	ret = clk_hw_register(NULL, &ctx->hw);
+	KUNIT_ASSERT_EQ(test, ret, 0);
+
+	clk = clk_hw_get_clk(&ctx->hw, NULL);
+	KUNIT_ASSERT_NOT_ERR_OR_NULL(test, clk);
+
+	/* Test that clk_round_rate() returns the requested rate */
+	rounded_rate = clk_round_rate(clk, DUMMY_CLOCK_RATE_1);
+	KUNIT_EXPECT_EQ(test, rounded_rate, DUMMY_CLOCK_RATE_1);
+
+	/* Set a rate and verify it works */
+	ret = clk_set_rate(clk, DUMMY_CLOCK_RATE_1);
+	KUNIT_ASSERT_EQ(test, ret, 0);
+
+	rate = clk_get_rate(clk);
+	KUNIT_EXPECT_EQ(test, rate, DUMMY_CLOCK_RATE_1);
+
+	clk_put(clk);
+	clk_hw_unregister(&ctx->hw);
+}
+
+static struct kunit_case clk_noop_round_rate_test_cases[] = {
+	KUNIT_CASE(clk_test_no_determine_rate_fails),
+	KUNIT_CASE(clk_test_noop_round_rate),
+	{}
+};
+
+/*
+ * Test suite for CLK_ROUNDING_NOOP flag.
+ */
+static struct kunit_suite clk_noop_round_rate_test_suite = {
+	.name = "clk_noop_round_rate_test",
+	.test_cases = clk_noop_round_rate_test_cases,
+};
+
 kunit_test_suites(
 	&clk_assigned_rates_suite,
+	&clk_noop_round_rate_test_suite,
 	&clk_hw_get_dev_of_node_test_suite,
 	&clk_leaf_mux_set_rate_parent_test_suite,
 	&clk_test_suite,

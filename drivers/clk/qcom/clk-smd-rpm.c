@@ -35,6 +35,7 @@
 					.name = "xo_board",		      \
 			},						      \
 			.num_parents = 1,				      \
+			.flags = CLK_ROUNDING_NOOP,		      \
 		},							      \
 	};								      \
 	static struct clk_smd_rpm clk_smd_rpm_##_prefix##_active = {	      \
@@ -52,7 +53,7 @@
 					.name = "xo_board",		      \
 			},						      \
 			.num_parents = 1,				      \
-			.flags = (ao_flags),				      \
+			.flags = (CLK_ROUNDING_NOOP | (ao_flags)),	      \
 		},							      \
 	}
 
@@ -370,17 +371,6 @@ static int clk_smd_rpm_set_rate(struct clk_hw *hw, unsigned long rate,
 	return 0;
 }
 
-static int clk_smd_rpm_determine_rate(struct clk_hw *hw,
-				      struct clk_rate_request *req)
-{
-	/*
-	 * RPM handles rate rounding and we don't have a way to
-	 * know what the rate will be, so just return whatever
-	 * rate is requested.
-	 */
-	return 0;
-}
-
 static unsigned long clk_smd_rpm_recalc_rate(struct clk_hw *hw,
 					     unsigned long parent_rate)
 {
@@ -427,7 +417,6 @@ static const struct clk_ops clk_smd_rpm_ops = {
 	.prepare	= clk_smd_rpm_prepare,
 	.unprepare	= clk_smd_rpm_unprepare,
 	.set_rate	= clk_smd_rpm_set_rate,
-	.determine_rate = clk_smd_rpm_determine_rate,
 	.recalc_rate	= clk_smd_rpm_recalc_rate,
 };
 

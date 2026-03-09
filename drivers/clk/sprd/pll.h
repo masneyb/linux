@@ -78,7 +78,7 @@ struct sprd_pll {
 			.regmap		= NULL,			\
 			.reg		= _reg,			\
 			.hw.init	= _fn(_name, _parent,	\
-					      &sprd_pll_ops, 0),\
+					      &sprd_pll_ops, CLK_ROUNDING_NOOP), \
 		},						\
 	}
 

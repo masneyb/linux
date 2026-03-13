@@ -315,6 +315,19 @@ static int clk_divider_bestdiv(struct clk_hw *hw, struct clk_hw *parent,
 		return bestdiv;
 	}
 
+	if (clk_has_v2_rate_negotiation(parent->core)) {
+		unsigned long lcm_rate;
+
+		lcm_rate = clk_hw_get_children_lcm(parent, hw, rate);
+		if (lcm_rate > 0) {
+			*best_parent_rate = lcm_rate;
+			bestdiv = _div_round(table, lcm_rate, rate, flags);
+			bestdiv = bestdiv == 0 ? 1 : bestdiv;
+			bestdiv = bestdiv > maxdiv ? maxdiv : bestdiv;
+			return bestdiv;
+		}
+	}
+
 	/*
 	 * The maximum divider we can use without overflowing
 	 * unsigned long in rate * i below
@@ -377,8 +390,19 @@ int divider_ro_determine_rate(struct clk_hw *hw, struct clk_rate_request *req,
 		if (!req->best_parent_hw)
 			return -EINVAL;
 
-		req->best_parent_rate = clk_hw_round_rate(req->best_parent_hw,
-							  req->rate * div);
+		if (clk_has_v2_rate_negotiation(req->best_parent_hw->core)) {
+			unsigned long lcm_rate;
+
+			lcm_rate = clk_hw_get_children_lcm(req->best_parent_hw, hw, req->rate);
+			if (lcm_rate > 0)
+				req->best_parent_rate = lcm_rate;
+			else
+				req->best_parent_rate = clk_hw_round_rate(req->best_parent_hw,
+									  req->rate * div);
+		} else {
+			req->best_parent_rate = clk_hw_round_rate(req->best_parent_hw,
+								  req->rate * div);
+		}
 	}
 
 	req->rate = DIV_ROUND_UP_ULL((u64)req->best_parent_rate, div);

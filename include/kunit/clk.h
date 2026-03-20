@@ -9,6 +9,13 @@ struct device_node;
 struct of_phandle_args;
 struct kunit;
 
+struct clk_dummy_context {
+	struct clk_hw hw;
+	unsigned long rate;
+};
+
+extern const struct clk_ops clk_dummy_rate_ops;
+
 struct clk *
 clk_get_kunit(struct kunit *test, struct device *dev, const char *con_id);
 struct clk *

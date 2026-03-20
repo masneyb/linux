@@ -15,6 +15,7 @@
 #include <kunit/of.h>
 #include <kunit/platform_device.h>
 #include <kunit/test.h>
+#include <kunit/visibility.h>
 
 #include "kunit_clk_assigned_rates.h"
 #include "clk_parent_data_test.h"
@@ -24,11 +25,6 @@ static const struct clk_ops empty_clk_ops = { };
 #define DUMMY_CLOCK_INIT_RATE	(42 * 1000 * 1000)
 #define DUMMY_CLOCK_RATE_1	(142 * 1000 * 1000)
 #define DUMMY_CLOCK_RATE_2	(242 * 1000 * 1000)
-
-struct clk_dummy_context {
-	struct clk_hw hw;
-	unsigned long rate;
-};
 
 static unsigned long clk_dummy_recalc_rate(struct clk_hw *hw,
 					   unsigned long parent_rate)
@@ -96,11 +92,12 @@ static u8 clk_dummy_single_get_parent(struct clk_hw *hw)
 	return 0;
 }
 
-static const struct clk_ops clk_dummy_rate_ops = {
+const struct clk_ops clk_dummy_rate_ops = {
 	.recalc_rate = clk_dummy_recalc_rate,
 	.determine_rate = clk_dummy_determine_rate,
 	.set_rate = clk_dummy_set_rate,
 };
+EXPORT_SYMBOL_IF_KUNIT(clk_dummy_rate_ops);
 
 static const struct clk_ops clk_dummy_maximize_rate_ops = {
 	.recalc_rate = clk_dummy_recalc_rate,
